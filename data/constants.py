@@ -1,0 +1,2 @@
+PROJECT_NAME = "Titan"
+PROJECT_SHORT_NAME = "titan"
