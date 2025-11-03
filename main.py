@@ -1,6 +1,11 @@
 import asyncio
 import platform
 
+# must be called before any other imports
+from utils.pyarmor_bootstrap import ensure_pyarmor_runtime_on_path
+
+ensure_pyarmor_runtime_on_path()
+
 import inquirer
 from colorama import Fore
 from inquirer import themes
