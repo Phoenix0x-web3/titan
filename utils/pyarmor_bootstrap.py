@@ -2,6 +2,8 @@ import platform
 import sys
 from pathlib import Path
 
+from loguru import logger
+
 
 def ensure_pyarmor_runtime_on_path():
     here = Path(__file__).resolve()
@@ -14,6 +16,7 @@ def ensure_pyarmor_runtime_on_path():
             break
 
     if rt_root is None:
+        logger.info("No 'runtimes' folder found for pyarmor")
         return False
 
     plat = {"Windows": "windows", "Linux": "linux", "Darwin": "macos"}[platform.system()]
@@ -24,6 +27,7 @@ def ensure_pyarmor_runtime_on_path():
     exact_base = rt_root / f"{plat}_{exact_tag}"
     if (exact_base / "pyarmor_runtime_000000").is_dir():
         sys.path.insert(0, str(exact_base))
+        logger.success("Using pyarmor runtime path: {exact_base}")
         return True
 
     # 2) best match by major.minor (pick highest patch available)
@@ -34,7 +38,8 @@ def ensure_pyarmor_runtime_on_path():
         reverse=True,
     )
     if candidates:
+        logger.success(f"Using pyarmor runtime path candidate: {candidates[0]}")
         sys.path.insert(0, str(candidates[0]))
         return True
-
+    logger.error(f"No suitable pyarmor runtime found for {plat} {exact_tag}")
     return False
