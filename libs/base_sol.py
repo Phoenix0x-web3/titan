@@ -12,15 +12,15 @@ from utils.db_api.models import Wallet
 
 class TokenContracts:
     SOL = RawContract(
-        title="SOL", mint="So11111111111111111111111111111111111111112", program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        title="SOL", mint="So11111111111111111111111111111111111111112", program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", decimals=9
     )
 
     USDC = RawContract(
-        title="USDC", mint="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        title="USDC", mint="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", decimals=6
     )
 
     USDT = RawContract(
-        title="USDT", mint="Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        title="USDT", mint="Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", decimals=6
     )
 
 
@@ -77,6 +77,18 @@ class Base:
                 continue
 
         return tokens
+
+    async def usd_balance_map(self, balances):
+        sol_price = await self.get_token_price(token_symbol="SOL")
+
+        usd_balanced = {}
+        for token, balance in balances.items():
+            if token == TokenContracts.SOL:
+                usd_balanced[token] = float(balance.Ether) * sol_price
+            else:
+                usd_balanced[token] = float(balance.Ether)
+
+        return usd_balanced
 
     async def debug_blockhashes(self, tx_b64: str) -> dict:
         tx = VersionedTransaction.from_bytes(base64.b64decode(tx_b64))

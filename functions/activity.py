@@ -36,6 +36,21 @@ async def update_statistics(wallet):
         raise e
 
 
+async def deposit(wallet):
+    try:
+        await random_sleep_before_start(wallet=wallet)
+
+        client = Client(private_key=wallet.private_key, network=Networks.Solana, proxy=wallet.proxy)
+        controller = Controller(client=client, wallet=wallet)
+
+        stats = await controller.deposit_controller()
+        logger.success(stats)
+
+    except Exception as e:
+        logger.error(f"Core | Deposit | {wallet} | {e}")
+        raise e
+
+
 async def swaps_activity_task(wallet):
     try:
         await random_sleep_before_start(wallet=wallet)
@@ -176,4 +191,10 @@ async def activity(action: int):
         await execute(
             wallets,
             update_statistics,
+        )
+
+    if action == 5:
+        await execute(
+            wallets,
+            deposit,
         )

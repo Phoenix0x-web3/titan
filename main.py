@@ -29,6 +29,7 @@ PROJECT_ACTIONS = [
     "2. Withdraw additional SOL to wallets",
     "3. Swap all SOL to UDST/USDC",
     "4. Update wallet statistics from app.titan.exchange",
+    "5. Transfer SOL to deposit address",
     "Back",
 ]
 
@@ -96,6 +97,8 @@ async def choose_action():
         await activity(action=3)
     elif "4." in action:
         await activity(action=4)
+    elif "5." in action:
+        await activity(action=5)
 
     elif action == "1. Reset files Folder":
         console.print("This action will delete the files folder and reset it.")
