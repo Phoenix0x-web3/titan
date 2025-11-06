@@ -1,5 +1,6 @@
 import asyncio
 import random
+from decimal import Decimal
 from time import time
 
 from loguru import logger
@@ -11,7 +12,7 @@ from libs.base_sol import TokenContracts
 from libs.sol_async_py.client import Client
 from libs.sol_async_py.data.models import TokenAmount
 from libs.sol_async_py.utils.utils import randfloat
-from libs.protected.titan import Titan
+from libs.protected.titan import Titan, TOKENS_MAP
 from utils.db_api.models import Wallet
 from utils.db_api.wallet_api import db
 from utils.logs_decorator import controller_log
@@ -163,6 +164,43 @@ class Controller:
         )
         return await self.make_first_swap(for_comissions=min_sol_for_comission)
 
+    async def deposit_controller(self):
+        if not self.wallet.deposit_address:
+            raise Exception(f"No deposit address provided, skipping deposit")
+
+        balances = await self.titan.balance_map(token_map=TOKENS_MAP)
+
+        for tok, balance in balances.items():
+            if tok != TokenContracts.SOL:
+                if float(balance.Ether) > 0:
+                    swap_back = await self.titan._swap(
+                        from_token=tok, to_token=TokenContracts.SOL, amount=balances[tok], to_token_decimals=balances[tok].decimals
+                    )
+                    sleep = random.randint(10, 15)
+                    logger.success(f"{swap_back} | sleeping {sleep} seconds for next tx")
+                    await asyncio.sleep(sleep)
+
+        sol_balance = await self.client.wallet.balance()
+
+        amount = TokenAmount(
+            amount=sol_balance.Ether - Decimal(randfloat(from_=0.001, to_=0.002, step=0.0001)), decimals=sol_balance.decimals)
+        try:
+            deposit = await self.client.wallet.transfer_native(
+                to_address=self.wallet.deposit_address,
+                amount=amount
+            )
+
+            logger.success(f"{self.wallet} | Deposit Controller | Sol Transfered | https://solscan.io/tx/{deposit}")
+            await asyncio.sleep(random.randint(10, 15))
+
+            balances = await self.titan.balance_map(token_map=TOKENS_MAP)
+            usd_balances = await self.titan.usd_balance_map(balances=balances)
+
+            return f"Deposit to {self.wallet.deposit_address} finished | Current USD Balances: {usd_balances}"
+
+        except Exception as e:
+            raise f"Deposit Controller | Error: {e}"
+
     async def build_actions(self):
         settings = Settings()
 
@@ -210,7 +248,7 @@ class Controller:
                     logger.exception(e)
                 #final_actions.append(lambda: self.titan.apply_referal())
 
-        if float(balance.Ether) <= settings.minimal_sol_balance and not initial:
+        if float(balance.Ether) <= settings.sol_balance_for_commissions_min and not initial:
 
             refill_sol_balance = await self.refill_sol_balance()
             logger.success(refill_sol_balance)
