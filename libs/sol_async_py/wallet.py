@@ -169,7 +169,7 @@ class Wallet:
 
         return await self.send_tx(message=tx)
 
-    async def send_tx_(self, message, signers=None):
+    async def send_tx(self, message, signers=None):
         if not signers:
             signers = self.client.account
 
