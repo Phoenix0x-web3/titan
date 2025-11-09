@@ -174,7 +174,7 @@ class Controller:
             if tok != TokenContracts.SOL:
                 if float(balance.Ether) > 0:
                     swap_back = await self.titan._swap(
-                        from_token=tok, to_token=TokenContracts.SOL, amount=balances[tok], to_token_decimals=balances[tok].decimals
+                        from_token=tok, to_token=TokenContracts.SOL, amount=balances[tok], to_token_decimals=balances[TokenContracts.SOL].decimals
                     )
                     sleep = random.randint(10, 15)
                     logger.success(f"{swap_back} | sleeping {sleep} seconds for next tx")
